@@ -9,3 +9,11 @@ The software was developed and tested in:
  - Ubuntu 16.04 LTS
  - ROS Kinetic
  - Gazebo 7.12
+ 
+## Installation
+
+To install the current version of this repository to your machine, cd into your catkin workspace source directory and clone the repository:
+
+```
+git clone https://github.com/sharon50270/meng_crumb_proj
+``` 
