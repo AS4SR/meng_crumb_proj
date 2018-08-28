@@ -17,3 +17,5 @@ To install the current version of this repository to your machine, cd into your 
 ```
 git clone https://github.com/sharon50270/meng_crumb_proj
 ``` 
+
+## Run the PDDL in Python Planner in Gazebo
