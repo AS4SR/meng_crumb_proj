@@ -1,26 +1,5 @@
 #!/usr/bin/env python
 """
-Example of using PyDDL to solve an eight-puzzle. Each number is a tile that
-can slide vertically or horizontally to fill in the blank space. This "hard"
-instance (requiring the maximum of 31 steps) is taken from the following paper:
-
-Reinefeld, Alexander. "Complete Solution of the Eight-Puzzle and the Benefit of
-  Node Ordering in IDA*." International Joint Conference on Artificial
-  Intelligence. 1993.
-
-Initial State:
-+---+---+---+
-| 8   7   6 |
-|     4   1 |
-| 2   5   3 |
-+---+---+---+
-
-Goal State:
-+---+---+---+
-|     1   2 |
-| 3   4   5 |
-| 6   7   8 |
-+---+---+---+
 
 """
 
@@ -198,7 +177,6 @@ def problem(verbose):
             flag = 'unfinish'
             while(flag != 'finish' or rank_return != rank): #status_listener.string != 'finish'):
                 pub.publish(str_arr)
-                #print(str_arr,i) 
                 i=i+1
                 #print(listening.action_state.strings,str_arr)
                 

@@ -1,14 +1,16 @@
 #!/usr/bin/env python
+"""
+Using PyDDL to do planning for CRUMB Robot Project
+Scenario 2
+
+"""
+
+
 from __future__ import print_function
-import rospy
-from std_msgs.msg import String, Float64
-from geometry_msgs.msg import Twist
-from math import pi
-import std_msgs.msg
-import ast 
 from pyddl import Domain, Problem, Action, neg, planner
 from rocon_std_msgs.msg import StringArray
 import rospy
+from subprocess import call
 
 class Listner_Action_states:
     def __init__(self):
@@ -131,17 +133,18 @@ def problem(verbose):
     problem = Problem(
         domain,
         {
-            'position': ('wp1', 'wp2', 'wp3'),
-            'location':('loc1','loc2'),
+            'position': ('wp1', 'wp2', 'wp3','wp4'),
+            'location':('loc1','loc2','loc3'),
             'object':('obj1','obj2'),
         },
         init=(
+            ('connect', 'wp4', 'wp3'),
             ('connect', 'wp3', 'wp2'),
             ('connect', 'wp2', 'wp1'),
-            ('connect', 'wp1', 'wp2'),
+            ('connect', 'wp1', 'wp3'),
             ('reachable','wp1','loc1'),
-            ('reachable','wp2','loc2'),
-            ('base', 'wp3'),
+            ('reachable','wp3','loc3'),
+            ('base', 'wp4'),
             ('locate','obj1','loc1'),
             ('ungripped','obj1'),
             ('arm','unreach'),
@@ -151,25 +154,49 @@ def problem(verbose):
         goal=(
             #('base','wp1'),
             #('gripped','obj1'),
-            ('locate','obj1','loc2'),
+            ('locate','obj1','loc3'),
             ('ungripped','obj1'),
         )
     )
 
 
     plan = planner(problem, verbose=verbose)
-    action_dict = {}
+    #action_string = []
+
+    rank = 1
+    rank_return = rank
     if plan is None:
         print('No Plan!')
     else: 
         for action in plan:
             str_arr = StringArray()
             i=1
+            str_arr.strings.append(str(rank))
             for arg in action.sig:
                 str_arr.strings.append(str(arg))
+            
             print(str_arr)
-           # action_dict = ast.literal_eval(action)
-            print (action)
+
+            flag = 'unfinish'
+            while(flag != 'finish' or rank_return != rank): #finish and rank 
+                pub.publish(str_arr)
+                #print(str_arr,i) 
+                i=i+1
+                #print(listening.action_state.strings,str_arr)
+                
+                if listening.action_state.strings:#empty check
+                    flag = listening.action_state.strings[1]
+                    rank_return = int(listening.action_state.strings[0])
+                    #while listening.action_state.strings[1] == 'finish':{} #may get previous 'finish', wait for a new unfinish
+                if rospy.is_shutdown() :
+                    return 0
+
+                #r.sleep()
+            print('finish',i)
+            rank = rank + 1
+    return 0
+    #print(action_string)
+    #return action_string
 
 if __name__ == '__main__':
     from optparse import OptionParser
@@ -183,6 +210,8 @@ if __name__ == '__main__':
     pub = rospy.Publisher('/action_strarr', StringArray, queue_size=10)
 
     listening = Listner_Action_states()
+
+
     #rospy.Subscriber("status_listener", String, callback)
     
     #Status_Listener status_listener

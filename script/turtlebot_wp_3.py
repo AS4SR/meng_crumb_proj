@@ -1,26 +1,7 @@
 #!/usr/bin/env python
 """
-Example of using PyDDL to solve an eight-puzzle. Each number is a tile that
-can slide vertically or horizontally to fill in the blank space. This "hard"
-instance (requiring the maximum of 31 steps) is taken from the following paper:
-
-Reinefeld, Alexander. "Complete Solution of the Eight-Puzzle and the Benefit of
-  Node Ordering in IDA*." International Joint Conference on Artificial
-  Intelligence. 1993.
-
-Initial State:
-+---+---+---+
-| 8   7   6 |
-|     4   1 |
-| 2   5   3 |
-+---+---+---+
-
-Goal State:
-+---+---+---+
-|     1   2 |
-| 3   4   5 |
-| 6   7   8 |
-+---+---+---+
+Using PDDL planning in Python (PyDDL) to do planning for CRUMB Robot Project
+Scenario 3
 
 """
 
@@ -29,6 +10,7 @@ from __future__ import print_function
 from pyddl import Domain, Problem, Action, neg, planner
 from rocon_std_msgs.msg import StringArray
 import rospy
+from subprocess import call
 
 class Listner_Action_states:
     def __init__(self):
@@ -151,26 +133,23 @@ def problem(verbose):
     problem = Problem(
         domain,
         {
-            'position': ('wp1', 'wp2', 'wp3'),
-            'location':('loc1','loc2'),
+            'position': ('wp1', 'wp2', 'wp3','wp4'),
+            'location':('loc1','loc2','loc3'),
             'object':('obj1','obj2'),
         },
         init=(
+            ('connect', 'wp4', 'wp3'),
             ('connect', 'wp3', 'wp2'),
             ('connect', 'wp2', 'wp1'),
-            ('connect', 'wp1', 'wp2'),
+            ('connect', 'wp1', 'wp3'),
             ('reachable','wp1','loc1'),
-            ('reachable','wp2','loc2'),
-            ('base', 'wp3'),
+            ('reachable','wp3','loc3'),
+            ('base', 'wp4'),
             ('locate','obj1','loc1'),
             ('ungripped','obj1'),
             ('arm','unreach'),
-            #('locate','obj2','loc2'),
-            #('ungripped','obj2'),
         ),
         goal=(
-            #('base','wp1'),
-            #('gripped','obj1'),
             ('locate','obj1','loc2'),
             ('ungripped','obj1'),
         )
@@ -179,34 +158,38 @@ def problem(verbose):
 
     plan = planner(problem, verbose=verbose)
     #action_string = []
+
+    rank = 1
+    rank_return = rank
     if plan is None:
         print('No Plan!')
     else: 
         for action in plan:
             str_arr = StringArray()
             i=1
+            str_arr.strings.append(str(rank))
             for arg in action.sig:
                 str_arr.strings.append(str(arg))
+            
             print(str_arr)
 
             flag = 'unfinish'
-            while(flag != 'finish'): #status_listener.string != 'finish'):
+            while(flag != 'finish' or rank_return != rank): #finish and rank 
                 pub.publish(str_arr)
                 #print(str_arr,i) 
                 i=i+1
-
-                #print(listening.action_state.strings)
+                #print(listening.action_state.strings,str_arr)
+                
                 if listening.action_state.strings:#empty check
                     flag = listening.action_state.strings[1]
-                    while listening.action_state.strings[1] == 'finish':{} #may get previous 'finish', wait for a new unfinish
+                    rank_return = int(listening.action_state.strings[0])
+                    #while listening.action_state.strings[1] == 'finish':{} #may get previous 'finish', wait for a new unfinish
                 if rospy.is_shutdown() :
                     return 0
 
                 #r.sleep()
             print('finish',i)
-                #print(status_listener.string)
-    #for i in action_string:
-    #    print(i)
+            rank = rank + 1
     return 0
     #print(action_string)
     #return action_string
@@ -223,6 +206,8 @@ if __name__ == '__main__':
     pub = rospy.Publisher('/action_strarr', StringArray, queue_size=10)
 
     listening = Listner_Action_states()
+
+
     #rospy.Subscriber("status_listener", String, callback)
     
     #Status_Listener status_listener

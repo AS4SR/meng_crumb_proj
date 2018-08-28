@@ -11,6 +11,16 @@ from kobuki_msgs.msg import MotorPower
 from std_msgs.msg import Float64
 from control_msgs.msg import JointControllerState
 
+class Listener_Action:
+    def __init__(self):
+        self.sub = rospy.Subscriber("/action_strarr", StringArray, self.callback)
+        self.action = StringArray()
+
+    def callback(self,data):
+        #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.strings)
+
+        self.action.strings = data.strings
+
 class Listener_Joint_grip:
     def __init__(self):
         self.sub = rospy.Subscriber("/gripper_1_joint/state", JointControllerState, self.callback)
@@ -35,18 +45,6 @@ class Listener_Joint_4:
     def callback(self,data):
 
         self.joint= data
-
-class Listener_Action:
-    def __init__(self):
-        self.sub = rospy.Subscriber("/action_strarr", StringArray, self.callback)
-        self.action = StringArray()
-
-    def callback(self,data):
-        #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.strings)
-
-        self.action.strings = data.strings
-
-
 
 class Listener_state:
 
@@ -97,11 +95,10 @@ def orientation(listen_object,listenToModelstate):
     sel_y = listenToModelstate.pose.position.y
     psidmpsi = 1
     kp_g = 0.75
-    while psidmpsi > 0.001 and fabs(listen_object.pose.orientation.w - listenToModelstate.pose.orientation.w) >= 0.01:
+    while psidmpsi > 0.001 and fabs(listen_object.pose.orientation.w - listenToModelstate.pose.orientation.w) > 0.005:
         psid   = np.arctan2(obj_y-sel_y, obj_x-sel_x)
         eular = tf.transformations.euler_from_quaternion(quaternion)
         psi = eular[2] # in radians
-        print(psi)
         psidmpsi = psid-psi
         psidot = kp_g * (psidmpsi)
         cmd = Twist()
@@ -124,7 +121,7 @@ if __name__ == '__main__':
     pub_j1 = rospy.Publisher('/arm_4_joint/command', Float64, queue_size=10)
     i = 0
 
-    while i < 20:#
+    while i < 20:
 
         pub_grip.publish(cmd_grip)
         pub_j.publish(0)
@@ -148,13 +145,13 @@ if __name__ == '__main__':
 
     sleep = 20
     i = 0
-    kp = 1.3
-   # kd = 2
+    kp = 5
+    kd = 2
     while not rospy.is_shutdown() : # main program
         #print(listening.action,'while loop')
 
 
-        if listening.action.strings: 
+        if listening.action.strings: #empty check
 
             action_states = StringArray()
             action_states.strings.append(listening.action.strings[0])
@@ -229,7 +226,7 @@ if __name__ == '__main__':
                     elif listening.action.strings[1] == 'grip':
                         cmd_grip = Float64()
                         cmd_grip = 0
-                        while joint_grip.joint.set_point != cmd_grip:
+                        while joint_grip.joint.set_point != cmd_grip :
                             pub_grip.publish(cmd_grip)
                             print 'gripping!',cmd_grip,joint_grip.joint.set_point
                         i = 0

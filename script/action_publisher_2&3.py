@@ -68,8 +68,9 @@ def wp_machine(waypoint):
 
     switcher = {
                 'wp1':[1,0],
-                'wp2':[1,1],
-                'wp3':[0,0]
+                'wp2':[-1,0],
+                'wp3':[0,1],
+                'wp4':[0,0]
                }
     return switcher.get(waypoint,[0,0])
 
@@ -88,6 +89,20 @@ class Listener_object:
             i=i+1
         self.pose = data.pose[i]
 
+class Listener_table:
+
+    def __init__(self):
+        self.sub = rospy.Subscriber("/gazebo/model_states", ModelStates, self.callback)
+        self.pose = Pose()
+
+    def callback(self,data):
+        i = 0
+        for name in data.name:
+            if name == "table1":
+                break
+            i=i+1
+        self.pose = data.pose[i]
+
 
 
 def orientation(listen_object,listenToModelstate):
@@ -96,13 +111,32 @@ def orientation(listen_object,listenToModelstate):
     sel_x = listenToModelstate.pose.position.x
     sel_y = listenToModelstate.pose.position.y
     psidmpsi = 1
-    kp_g = 0.75
-    while psidmpsi > 0.001 and fabs(listen_object.pose.orientation.w - listenToModelstate.pose.orientation.w) > 0.005:
+    kp_g = 2
+    while psidmpsi > 0.001:# and fabs(listen_object.pose.orientation.w - listenToModelstate.pose.orientation.w) >= 0.01:
         psid   = np.arctan2(obj_y-sel_y, obj_x-sel_x)
         eular = tf.transformations.euler_from_quaternion(quaternion)
         psi = eular[2] # in radians
+        print(psi)
         psidmpsi = psid-psi
         psidot = kp_g * (psidmpsi)
+        cmd = Twist()
+        cmd.angular.z = psidot
+        pub_base.publish(cmd)
+
+def to_table(listen_table,listenToModelstate):
+    obj_x = listen_object.pose.position.x
+    obj_y = listen_object.pose.position.y
+    sel_x = listenToModelstate.pose.position.x
+    sel_y = listenToModelstate.pose.position.y
+    psidmpsi = 1
+    kp_p = 0.5
+    while psidmpsi > 0.001:# and fabs(listen_object.pose.orientation.w - listenToModelstate.pose.orientation.w) >= 0.01:
+        psid   = np.arctan2(obj_y-sel_y, obj_x-sel_x)
+        eular = tf.transformations.euler_from_quaternion(quaternion)
+        psi = eular[2] # in radians
+        print(psi)
+        psidmpsi = psid-psi
+        psidot = kp_p * (psidmpsi)
         cmd = Twist()
         cmd.angular.z = psidot
         pub_base.publish(cmd)
@@ -123,7 +157,7 @@ if __name__ == '__main__':
     pub_j1 = rospy.Publisher('/arm_4_joint/command', Float64, queue_size=10)
     i = 0
 
-    while i < 20:
+    while i < 20:#
 
         pub_grip.publish(cmd_grip)
         pub_j.publish(0)
@@ -140,6 +174,7 @@ if __name__ == '__main__':
     listening = Listener_Action()
     listenToModelstate = Listener_state()
     listen_object = Listener_object()
+    listen_table = Listener_table()
     joint_2 = Listener_Joint_2()
     joint_4 = Listener_Joint_4()
     joint_grip = Listener_Joint_grip()
@@ -147,13 +182,13 @@ if __name__ == '__main__':
 
     sleep = 20
     i = 0
-    kp = 5
-    kd = 2
+    kp = 1.5
+   # kd = 2
     while not rospy.is_shutdown() : # main program
         #print(listening.action,'while loop')
 
 
-        if listening.action.strings: #empty check
+        if listening.action.strings: 
 
             action_states = StringArray()
             action_states.strings.append(listening.action.strings[0])
@@ -209,6 +244,8 @@ if __name__ == '__main__':
                         if not rospy.is_shutdown():
                             if listening.action.strings[1] == 'reach' :
                                 orientation(listen_object,listenToModelstate)
+                            else:
+                                orientation(listen_table,listenToModelstate)                                
                             cmd_j = Float64()
                             cmd_j = pi/6
                             cmd_j1 = Float64()
@@ -228,7 +265,7 @@ if __name__ == '__main__':
                     elif listening.action.strings[1] == 'grip':
                         cmd_grip = Float64()
                         cmd_grip = 0
-                        while joint_grip.joint.set_point != cmd_grip :
+                        while joint_grip.joint.set_point != cmd_grip:
                             pub_grip.publish(cmd_grip)
                             print 'gripping!',cmd_grip,joint_grip.joint.set_point
                         i = 0
