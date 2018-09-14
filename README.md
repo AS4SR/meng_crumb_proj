@@ -19,3 +19,41 @@ git clone https://github.com/sharon50270/meng_crumb_proj
 ``` 
 
 ## Run the PDDL in Python Planner in Gazebo
+
+# Launch the Gazebo file under meng_crumb_project package first
+First scenario:
+```
+roslaunch meng_crumb_project crumb.launch
+```
+
+Second and third scenario:
+```
+roslaunch meng_crumb_project crumb_1.launch
+```
+
+# Rosrun file to generate the planner
+
+```
+cd script
+```
+First scenario:
+```
+rosrun meng_crumb_project turtlebot_wp_1.py
+```
+Second scenario:
+```
+rosrun meng_crumb_project turtlebot_wp_2.py
+```
+Third scenario:
+```
+rosrun meng_crumb_project turtlebot_wp_3.py
+```
+
+# Publish messages to different topic names to have the CRUMB to perform desired motions
+```
+rosrun meng_crumb_project action_publisher_1.py
+```
+Second and third scenario:
+```
+rosrun meng_crumb_project action_publisher_2&3.py
+```
