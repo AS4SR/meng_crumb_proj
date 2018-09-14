@@ -50,6 +50,7 @@ rosrun meng_crumb_project turtlebot_wp_3.py
 ```
 
 ### Publish messages to different topic names to have the CRUMB to perform desired motions
+First scenario:
 ```
 rosrun meng_crumb_project action_publisher_1.py
 ```
