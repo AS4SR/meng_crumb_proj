@@ -17,7 +17,6 @@ To install the current version of this repository to your machine, cd into your 
 ```
 git clone https://github.com/sharon50270/meng_crumb_proj
 ``` 
-
 ## Run the PDDL in Python Planner in Gazebo
 
 ### Launch the Gazebo file under meng_crumb_project package first
@@ -58,3 +57,9 @@ Second and third scenario:
 ```
 rosrun meng_crumb_project action_publisher_2&3.py
 ```
+
+### Hardware setup
+```
+roslaunch turtlebot_bringup minimal.lauch
+```
+http://learn.turtlebot.com/2015/02/01/9/
