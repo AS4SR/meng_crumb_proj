@@ -76,3 +76,7 @@ roslaunch turtlebot_bringup minimal.lauch
 http://learn.turtlebot.com/2015/02/01/9/
 
 Setup up Arbotix on WidowX arm - https://github.com/RobotnikAutomation/widowx_arm
+
+To make sure your account has permissions to access to /dev/ttyUSB0
+```
+sudo chmod a+rw /dev/ttyUSB0
